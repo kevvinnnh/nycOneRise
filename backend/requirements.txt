@@ -1,5 +1,7 @@
-fastapi==0.115.5
-uvicorn[standard]==0.32.0
-numpy==2.1.2
-pandas==2.2.3
-pyarrow==17.0.0
+fastapi
+uvicorn
+sentence-transformers
+numpy
+pandas
+torch
+scikit-learn

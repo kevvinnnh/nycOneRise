@@ -1,7 +1,7 @@
 fastapi
 uvicorn
-sentence-transformers
-numpy
 pandas
-torch
+numpy
+sentence-transformers
 scikit-learn
+pyarrow==17.0.0

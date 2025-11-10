@@ -17,17 +17,20 @@ app = FastAPI(title="OneRise Founder Match API", version="0.1.0")
 
 # allow local file + gh-pages origin; add your production frontend origin here
 
+# ✅ Allow both local and deployed frontends
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://kevvinnnh.github.io",  # e.g. https://kevvinnnh.github.io
-        "https://nyconerise.onrender.com",   # backend self
+        "https://kevvinnnh.github.io",   # your deployed frontend
+        "http://127.0.0.1:5500",         # local frontend
+        "http://localhost:5500",
+        "http://[::]:5500",              # for IPv6 (Safari / macOS)
+        "https://nyconerise.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # global state
 E_NEEDS = None
 E_GIVES = None

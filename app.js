@@ -1,8 +1,8 @@
 const API_BASE = (() => {
-  if (window.location.hostname.includes("localhost")) {
-    return "http://127.0.0.1:8000";
+  if (window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1") || window.location.hostname.includes("[::]")) {
+    return "http://127.0.0.1:8000"; // local backend
   }
-  return "https://nyconerise.onrender.com";
+  return "https://nyconerise.onrender.com"; // deployed backend
 })();
 
 const founderSelect = document.getElementById("founderSelect");

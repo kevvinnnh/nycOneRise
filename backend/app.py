@@ -116,6 +116,11 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
         matches=rows
     )
     
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health():
-    return {"ok": True, "rows": len(DF), "dims": int(E_NEEDS.shape[1]), "manifest": MANIFEST}
+    return {
+        "ok": True,
+        "rows": len(DF),
+        "dims": int(E_NEEDS.shape[1]),
+        "manifest": MANIFEST
+    }

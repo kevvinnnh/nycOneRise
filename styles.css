@@ -140,3 +140,74 @@ body{
 .settings h3{margin:0 0 8px}
 .settings .row{margin-top:10px; justify-content:flex-end}
 @media (max-width:1100px){ .layout{grid-template-columns:1fr} .matches .match{grid-column:span 12} }
+
+
+/* Founder List Container */
+.founder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(12, 16, 24, 0.8);
+  border: 1px solid #1e2636;
+  border-radius: 12px;
+  padding: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2b3348 transparent;
+}
+
+/* Each Founder Row */
+.founder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.founder-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.founder-item.active {
+  background: linear-gradient(90deg, rgba(122,162,255,0.12), rgba(79,236,181,0.10));
+  border: 1px solid #2a3348;
+}
+
+/* Inside the row */
+.founder-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.founder-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #1b2234;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #bcd1ff;
+}
+
+.founder-industry {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.founder-id {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.6;
+}

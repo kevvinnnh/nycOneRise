@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OneRise Founder Matches</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>Founder Match Browser</h1></header>
+
+  <main>
+    <section class="card">
+      <label for="founderSelect">Choose a founder</label>
+      <div class="row">
+        <input id="search" placeholder="Search by name or industry…" />
+        <button id="loadBtn">Search</button>
+      </div>
+      <select id="founderSelect" size="10"></select>
+      <div class="row">
+        <label for="kInput">Top-K:</label>
+        <input id="kInput" type="number" value="5" min="1" max="50" />
+        <button id="matchBtn">Get Matches</button>
+      </div>
+    </section>
+
+    <section id="result" class="card">
+      <h2>Matches</h2>
+      <div id="queryMeta" class="meta"></div>
+      <ol id="matchList"></ol>
+    </section>
+  </main>
+
+  <footer><small>Built with FastAPI + vanilla JS</small></footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

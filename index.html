@@ -2,36 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OneRise Founder Matches</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OneRise · Matches</title>
+  <meta name="color-scheme" content="dark">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header><h1>Founder Match Browser</h1></header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>OneRise · Founder Matches</h1>
+      <span id="envChip" class="env-chip">Detecting…</span>
+    </div>
+    <div class="actions">
+      <button id="btnSettings" class="btn">Settings</button>
+      <button id="btnRefresh" class="btn primary">Refresh</button>
+    </div>
+  </div>
 
-  <main>
-    <section class="card">
-      <label for="founderSelect">Choose a founder</label>
-      <div class="row">
-        <input id="search" placeholder="Search by name or industry…" />
-        <button id="loadBtn">Search</button>
+  <div class="layout">
+    <!-- LEFT: Search + List -->
+    <aside class="panel col">
+      <div class="field">
+        <input id="search" class="input" placeholder="Search founders by name, industry, skill…" />
       </div>
-      <select id="founderSelect" size="10"></select>
       <div class="row">
-        <label for="kInput">Top-K:</label>
-        <input id="kInput" type="number" value="5" min="1" max="50" />
-        <button id="matchBtn">Get Matches</button>
+        <button id="loadBtn" class="btn grow">Search</button>
+        <button id="matchBtn" class="btn primary">Find Matches (M)</button>
+      </div>
+      <div class="divider"></div>
+      <div class="hint">Founders</div>
+      <select id="founderSelect" class="select" size="14"></select>
+
+      <div class="divider"></div>
+      <div class="kbar">
+        <div class="hint">Top-K</div>
+        <input id="kInput" class="slider" type="range" min="1" max="50" step="1" value="5" />
+        <div id="kVal" class="kval">5</div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Details + Matches -->
+    <section class="panel grid">
+      <div class="card" id="detailsCard">
+        <div class="header">
+          <div class="who">
+            <div id="avatar" class="avatar">?</div>
+            <div>
+              <h2 class="name" id="name">Select a founder</h2>
+              <div class="chips" id="chips"></div>
+            </div>
+          </div>
+          <div class="meta" id="meta"></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="section-title">Needs</div>
+          <div id="needs" class="mono skeleton" style="min-height:44px; border-radius:10px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="header">
+          <div>
+            <div class="section-title" style="margin-bottom:2px">Top Matches</div>
+            <div class="muted" id="matchSubtitle">Run a query to see matches.</div>
+          </div>
+          <div class="row">
+            <button id="btnCopy" class="btn">Copy list</button>
+          </div>
+        </div>
+        <div id="matches" class="matches" style="margin-top:8px">
+          <div class="empty">No results yet. Pick a founder and press <strong>Find Matches</strong>.</div>
+        </div>
       </div>
     </section>
+  </div>
 
-    <section id="result" class="card">
-      <h2>Matches</h2>
-      <div id="queryMeta" class="meta"></div>
-      <ol id="matchList"></ol>
-    </section>
-  </main>
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 
-  <footer><small>Built with FastAPI + vanilla JS</small></footer>
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="settings-modal">
+    <div class="settings">
+      <h3>Settings</h3>
+      <div class="hint">API Base URL</div>
+      <input id="apiBaseInput" class="input" placeholder="https://nyconerise.onrender.com" />
+      <div class="row">
+        <button id="btnCancelSettings" class="btn">Cancel</button>
+        <button id="btnSaveSettings" class="btn primary">Save</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

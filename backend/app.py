@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
@@ -116,11 +116,18 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
         matches=rows
     )
     
-@app.api_route("/api/health", methods=["GET", "HEAD"])
-def health():
-    return {
-        "ok": True,
-        "rows": len(DF),
-        "dims": int(E_NEEDS.shape[1]),
-        "manifest": MANIFEST
-    }
+# --- Health: explicit GET + explicit HEAD ---
+@app.get("/api/health")
+def health_get():
+    return {"ok": True, "rows": len(DF), "dims": int(E_NEEDS.shape[1]), "manifest": MANIFEST}
+
+@app.head("/api/health")
+def health_head():
+    # Lightweight 200 for HEAD checks
+    return Response(status_code=200)
+
+# Optional: alternate ping that accepts both GET/HEAD with a single route
+@app.api_route("/api/ping", methods=["GET", "HEAD"])
+def ping():
+    return {"ok": True}
+

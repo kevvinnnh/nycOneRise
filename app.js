@@ -1,4 +1,9 @@
-const API_BASE = localStorage.getItem("apiBase") || "http://localhost:8000";
+const API_BASE = (() => {
+  if (window.location.hostname.includes("localhost")) {
+    return "http://127.0.0.1:8000";
+  }
+  return "https://nyconerise.onrender.com";
+})();
 
 const founderSelect = document.getElementById("founderSelect");
 const searchInput = document.getElementById("search");

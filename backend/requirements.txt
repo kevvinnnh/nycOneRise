@@ -4,4 +4,4 @@ pandas
 numpy
 sentence-transformers
 scikit-learn
-pyarrow==17.0.0
+fastparquet==2024.5.0

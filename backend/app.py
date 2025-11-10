@@ -41,7 +41,8 @@ def load_artifacts():
 
     E_NEEDS = np.load(NEEDS_PATH).astype("float32")
     E_GIVES = np.load(GIVES_PATH).astype("float32")
-    DF = pd.read_parquet(META_PATH)
+    DF = pd.read_parquet(META_PATH, engine="fastparquet")
+
 
     if os.path.exists(MANIFEST_PATH):
         with open(MANIFEST_PATH, "r") as f:

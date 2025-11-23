@@ -31,13 +31,31 @@
         <button id="matchBtn" class="btn primary">Find Matches (M)</button>
       </div>
       <div class="divider"></div>
+      <button id = "addFounderBtn" class="btn primary">+ Add Founder</button>
+      <div id = "addFounderForm" class="card" style="margin-top:10px; display:none;">
+        <div class="field">
+          <input id="founderNameInput" class="input" placeholder="Founder Name" />
+        </div>
+        <div class="field">
+          <input id="founderIndustryInput" class="input" placeholder="Meta (e.g., Role, Company)" />
+        </div>
+        <div class="field">
+          <input id="founderNeedsInput" class="input" placeholder="Needs (comma-separated)" />
+        </div>
+         <div class="field">
+          <input id="founderGivesInput" class="input" placeholder="Gives (comma-separated)" />
+        </div>
+        <div class="row">
+          <button id="cancelAddFounderBtn" class="btn">Cancel</button>
+          <button id="submitAddFounderBtn" class="btn primary">Save Founder</button>
+        </div>
       <div class="hint">Founders</div>
       <div class="founder-list" id="founderList"></div>
 
       <div class="divider"></div>
       <div class="kbar">
         <div class="hint">Top-K</div>
-        <input id="kInput" class="slider" type="range" min="1" max="50" step="1" value="5" />
+        <input id="kInput" class="slider" type="range" min="1" max="10" step="1" value="5" />
         <div id="kVal" class="kval">5</div>
       </div>
     </aside>

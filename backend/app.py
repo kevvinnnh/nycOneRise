@@ -4,6 +4,9 @@ from pydantic import BaseModel
 import numpy as np
 import pandas as pd
 import os, json
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 APP_DIR = os.path.dirname(__file__)
 ART_DIR = os.path.join(APP_DIR, "artifacts")
@@ -58,6 +61,22 @@ def load_artifacts():
     assert E_GIVES.shape[0] == len(DF)
     # assume rows are L2-normalized; if not, normalize:
     # E_NEEDS /= (np.linalg.norm(E_NEEDS, 1) + 1e-12)
+
+#explanation generator 
+#download NLTK resources 
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
+
+#preprocess text function 
+def preprocess_text(text: str) -> str:
+    words = nltk.word_tokenize(str(text))
+    words = [lemmatizer.lemmatize(w) for w in words if w.lower() not in stop_words]
+    return " ".join(words)
 
 @app.on_event("startup")
 def startup_event():
@@ -115,6 +134,43 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
         },
         matches=rows
     )
+    
+@app.get("/api/explain")
+def explain(founder_index: int = Query (..., ge=0), k:int=Query(5, ge=1, le=50)):
+    #text explanation for top-k matches of given founder
+    if founder_index >= len(DF):
+        raise HTTPException(400, f"index must be < {len(DF)}")
+    
+    #compute similarities 
+    sims = E_NEEDS[founder_index] @ E_GIVES.T
+    sims[founder_index] = -1e9 
+    top_idx = np.argpartition(-sims, k)[:k]
+    top_idx = top_idx[np.argsort(-sims[top_idx])]
+    
+    #explanations array 
+    explanations=[]
+    
+    needs_text = preprocess_text(str(DF.iloc[founder_index]["__needs_text__"]))
+    for j in top_idx:
+        gives_text = preprocess_text(str(DF.iloc[j]["__gives_text__"]))
+        
+        explanations.append({
+            "founder_name": DF.iloc[j]["founder_name"],
+            "industry": DF.iloc[j]["industry"],
+            "similarity_score": float(sims[j]),
+            "explanation": f"Match based on overlap between founder needs: '{needs_text}' and gives: '{gives_text}'"
+        })
+    
+    #return explanations 
+    return {
+        "query_index": founder_index,
+        "founder": {
+            "founder_name": DF.iloc[founder_index]["founder_name"],
+            "industry": DF.iloc[founder_index]["industry"],
+        },
+        "explanations": explanations
+    }
+
     
 # --- Health: explicit GET + explicit HEAD ---
 @app.get("/api/health")

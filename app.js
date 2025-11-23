@@ -17,6 +17,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = $("#search");
   const loadBtn = $("#loadBtn");
   const matchBtn = $("#matchBtn");
+
+  //add founder button
+  const addFounderBtn = $("#addFounderBtn");
+  const addForm = $("#addFounderBtn");
+  const newName = $("#founderNameInput");
+  const newIndustry = $("#founderIndustryInput");
+  const newNeeds = $("#founderNeedsInput");
+  const newGives = $("#founderGivesInput");
+  const btnCancelAdd = $("#cancelAddFounderBtn");
+  const btnSaveAdd = $("#submitAddFounderBtn");
+
   const kInput = $("#kInput");
   const kVal = $("#kVal");
   const matches = $("#matches");
@@ -94,6 +105,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`TopK fetch failed: ${res.status}`);
     return res.json();
+  }
+
+  //api explanation generator 
+  async function apiExplain(globalIndex, k) {
+    try {
+      const url = new URL(API_BASE + "/api/explain");
+      url.searchParams.set("founder_idnex", globalIndex);
+      url.searchParams.set("k", k);
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Explaination fetch failed");
+      return res.json();
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to fetch explanation");
+    }
   }
 
   // ---------- details helpers ----------
@@ -205,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("topK", String(k));
 
     matches.innerHTML = "";
-    for (let i = 0; i < Math.min(k, 8); i++) {
+    for (let i = 0; i < Math.min(k, 10); i++) {
       const sk = document.createElement("div");
       sk.className = "match skeleton";
       sk.style.height = "88px";
@@ -228,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       matches.innerHTML = "";
-      data.matches.forEach(m => {
+      data.matches.forEach(m, idx => {
         const sc = scorePct(m.score);
         const el = document.createElement("div");
         el.className = "match";
@@ -250,7 +277,15 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="body">
             <div class="muted">Gives</div>
-            <div class="mono match-gives">${(m.gives_text || "—").slice(0, 420)}</div>
+            <div class="mono match-gives short">
+            ${(m.gives_text || "—").slice(0, 420)}
+            </div>
+            <button class = "toggle-details btn small">Show More</button>
+            <div class="mono match-gives full" style="display:none;">
+            ${m.gives_text || "—"}
+            </div>
+            <button class="btn small show-explanation".Show Explanation</button>
+            <div class="explanation" style="margin-top:5px; font-size:0.85em; display:none;"></div>
           </div>
         `;
         matches.appendChild(el);
@@ -269,6 +304,105 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loadBtn) loadBtn.addEventListener("click", loadFounders);
   if (btnRefresh) btnRefresh.addEventListener("click", loadFounders);
   if (matchBtn) matchBtn.addEventListener("click", runTopK);
+
+  //events for add founder button
+  if (addFounderBtn) {
+    addFounderBtn.addEventListener("click", () => {
+      addForm.style.display = add.Form.style.display === "block" ? "none" : "block";
+    });
+  }
+  //cancel the add founder form
+  if (btnCancelAdd) {
+    btnCancelAdd.addEventListener("click", () => {
+      addForm.style.display = "none";
+      newName.value = "";
+      newIndustry.value = "";
+      newNeeds.value = "";
+      newGives.value = "";
+    });
+  }
+  //submit the add founder form
+  if (btnSaveAdd) {
+    btnSaveAdd.addEventListener("click", async () => {
+      const name = newName.value.trim();
+      const industry = newIndustry.value.trim();
+      const needs = newNeeds.value.trim();
+      const gives = newGives.value.trim();
+       if (!name) {
+      showToast("Enter a founder name");
+      return;
+    }
+
+    try {
+      const res = await fetch(API_BASE + "/api/founders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          founder_name: name,
+          industry: industry,
+          gives_text: gives,
+          needs_text: needs,
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      showToast("Founder added");
+      addForm.style.display = "none";
+
+      newName.value = "";
+      newMeta.value = "";
+      newNeeds.value = "";
+
+      loadFounders();
+    } catch (err) {
+      showToast("Error adding founder");
+      console.error(err);
+    }
+  });
+}
+
+// toggle handling for dropdown details in matches
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("toggle-details")) {
+    const card = e.target.closest(".match");
+    const shortEl = card.querySelector(".match-gives.short");
+    const fullEl  = card.querySelector(".match-gives.full");
+
+    const expanded = fullEl.style.display === "block";
+
+    if (expanded) {
+      fullEl.style.display = "none";
+      shortEl.style.display = "block";
+      e.target.textContent = "Show More";
+    } else {
+      fullEl.style.display = "block";
+      shortEl.style.display = "none";
+      e.target.textContent = "Show Less";
+    }
+  }
+});
+// explanation handling for matches
+matches.addEventListener("click", async e => {
+  if (e.target.classList.contains("show-explanation")) {
+    const card = e.target.closest(".match");
+    const explanationDiv = card.querySelector(".explanation");
+
+    if (explanationDiv.style.display === "block") {
+      explanationDiv.style.display = "none";
+      e.target.textContent = "Show Explanation";
+    } else {
+      e.target.textContent = "Loading…";
+      const data = await apiExplain(selectedGlobalIndex, parseInt(kInput.value));
+      const idx = parseInt(card.dataset.index);
+      explanationDiv.textContent = data?.explanations?.[idx]?.explanation || "No explanation available";
+      explanationDiv.style.display = "block";
+      e.target.textContent = "Hide Explanation";
+    }
+  }
+});
+
+
 
   if (kInput && kVal) {
     kInput.value = localStorage.getItem("topK") || "5";

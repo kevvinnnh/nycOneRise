@@ -18,8 +18,7 @@ MANIFEST_PATH = os.path.join(ART_DIR, "manifest.json")
 
 app = FastAPI(title="OneRise Founder Match API", version="0.1.0")
 
-# allow local file + gh-pages origin; add your production frontend origin here
-
+#
 # ✅ Allow both local and deployed frontends
 app.add_middleware(
     CORSMiddleware,

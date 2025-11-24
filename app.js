@@ -488,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("keydown", e => {
     const key = e.key?.toLowerCase?.();
-    if (key === "m") {
+    if (key === "m" && e.ctrlKey) {
       e.preventDefault();
       runTopK();
     }

@@ -94,7 +94,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- data ----------
   let cacheList = [];
-  let selectedGlobalIndex = null;
+  let selectedGlobalIndex = null; // global DF index (from backend) when present
+  let selectedLocalIndex = null;  // index into cacheList (local array index)
 
 
   // ---------- API ----------
@@ -147,17 +148,19 @@ document.addEventListener("DOMContentLoaded", () => {
       `<div class="empty">No results yet. Pick a founder and press <strong>Find Matches</strong>.</div>`;
     matchSubtitle.textContent = "Run a query to see matches.";
     selectedGlobalIndex = null;
+    selectedLocalIndex = null;
   }
 
 
   function setSelectedIndex(idx) {
-  if (idx == null || idx < 0 || !cacheList[idx]) {
-    resetDetails();
-    return;
-  }
-  const f = cacheList[idx];
-  // prefer explicit global DF index returned by backend; fallback to local idx
-  selectedGlobalIndex = (typeof f.index !== "undefined") ? f.index : idx;
+    if (idx == null || idx < 0 || !cacheList[idx]) {
+      resetDetails();
+      return;
+    }
+    const f = cacheList[idx];
+    // prefer explicit global DF index returned by backend; fallback to local idx
+    selectedGlobalIndex = (typeof f.index !== "undefined") ? f.index : idx;
+    selectedLocalIndex = idx;
 
 
     nameEl.textContent = f.founder_name || "Unnamed founder";
@@ -180,6 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------- render founders ----------
   function renderFounders(list) {
     const listEl = document.getElementById("founderList");
+    if (!listEl) return;
     listEl.innerHTML = "";
     cacheList = list;
 
@@ -227,12 +231,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ---------- load founders ----------
-  async function loadFounders() {
+  // now accepts optional selectFounderId (e.g. the id returned after POST)
+  async function loadFounders(selectFounderId = null) {
     try {
       renderFounders([]);
       const q = searchInput?.value || "";
       const data = await apiFounders(q);
       renderFounders(data);
+
+      // If a specific founder ID was supplied (e.g. just-created), try to select them
+      if (selectFounderId) {
+        // allow number/string tolerance
+        const idx = data.findIndex(f => String(f.founder_id) === String(selectFounderId));
+        if (idx >= 0) {
+          setSelectedIndex(idx);
+          document.querySelectorAll(".founder-item")[idx]?.classList.add("active");
+          return;
+        }
+      }
+
+      // Otherwise default to first item
       if (data.length) {
         setSelectedIndex(0);
         document.querySelectorAll(".founder-item")[0]?.classList.add("active");
@@ -270,8 +288,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const f = data.founder || {};
       // Always re-render needs after match fetch
       if (f.needs_text) needs.textContent = f.needs_text;
-      else if (cacheList[selectedGlobalIndex])
-        needs.textContent = cacheList[selectedGlobalIndex].needs_text || "—";
+      else if (selectedLocalIndex != null && cacheList[selectedLocalIndex])
+        needs.textContent = cacheList[selectedLocalIndex].needs_text || "—";
 
 
       if (!Array.isArray(data.matches) || data.matches.length === 0) {
@@ -283,36 +301,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
       matches.innerHTML = "";
       data.matches.forEach((m, idx) => {
-      const sc = scorePct(m.score);
-      const el = document.createElement("div");
-      el.className = "match";
-      // store the global DF index returned by backend (m.index)
-      el.dataset.index = m.index ?? idx;
-      el.innerHTML = `
-        <div class="top">
-          <div class="who">
-            <div class="avatar" style="width:34px;height:34px">${initials(m.founder_name)}</div>
-            <div>
-              <div class="match-name" style="font-weight:650">${m.founder_name ?? "—"}</div>
-              <div class="muted match-industry">${m.industry ?? "—"}</div>
+        const sc = scorePct(m.score);
+        const el = document.createElement("div");
+        const gives = m.gives_text || "—";
+
+        // split by comma or newline
+        const givesList = gives.split(/[,|\n]+/).map(x => x.trim()).filter(Boolean);
+
+        // first 3
+        const shortGives = givesList.slice(0, 3).join(", ");
+
+        // full
+        const fullGives = givesList.join(", ");
+
+        el.className = "match";
+        // store the global DF index returned by backend (m.index)
+        el.dataset.index = m.index ?? idx;
+        el.innerHTML = `
+          <div class="top">
+            <div class="who">
+              <div class="avatar" style="width:34px;height:34px">${initials(m.founder_name)}</div>
+              <div>
+                <div class="match-name" style="font-weight:650">${m.founder_name ?? "—"}</div>
+                <div class="muted match-industry">${m.industry ?? "—"}</div>
+              </div>
+            </div>
+            <div class="score">
+              <span class="match-score">${sc}%</span>
+              <div class="bar"><i style="width:${sc}%"></i></div>
             </div>
           </div>
-          <div class="score">
-            <span class="match-score">${sc}%</span>
-            <div class="bar"><i style="width:${sc}%"></i></div>
+          <div class="body">
+            <div class="muted">Gives</div>
+            <div class="mono match-gives short">${shortGives}</div>
+            <button class="toggle-details btn small">Show More</button>
+            <div class="mono match-gives full" style="display:none;">${fullGives}</div>
+            <button class="btn small show-explanation">Show Explanation</button>
+            <div class="explanation" style="margin-top:5px; font-size:0.85em; display:none;"></div>
           </div>
-        </div>
-        <div class="body">
-          <div class="muted">Gives</div>
-          <div class="mono match-gives short">${(m.gives_text || "—").slice(0,420)}</div>
-          <button class="toggle-details btn small">Show More</button>
-          <div class="mono match-gives full" style="display:none;">${m.gives_text || "—"}</div>
-          <button class="btn small show-explanation">Show Explanation</button>
-          <div class="explanation" style="margin-top:5px; font-size:0.85em; display:none;"></div>
-        </div>
-      `;
-      matches.appendChild(el);
-    });
+        `;
+        matches.appendChild(el);
+      });
       matchSubtitle.textContent = `${data.matches.length} results`;
       showToast("Matches updated");
     } catch (e) {
@@ -325,17 +354,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ---------- events ----------
-  if (loadBtn) loadBtn.addEventListener("click", loadFounders);
-  if (btnRefresh) btnRefresh.addEventListener("click", loadFounders);
+  if (loadBtn) loadBtn.addEventListener("click", () => loadFounders());
+  if (btnRefresh) btnRefresh.addEventListener("click", () => loadFounders());
   if (matchBtn) matchBtn.addEventListener("click", runTopK);
 
 
   //events for add founder button
   if (addFounderBtn) {
-  addFounderBtn.addEventListener("click", () => {
-    addForm.style.display = addForm.style.display === "block" ? "none" : "block";
-  });
-}
+    addFounderBtn.addEventListener("click", () => {
+      addForm.style.display = addForm.style.display === "block" ? "none" : "block";
+    });
+  }
   //cancel the add founder form
   if (btnCancelAdd) {
     btnCancelAdd.addEventListener("click", () => {
@@ -353,93 +382,96 @@ document.addEventListener("DOMContentLoaded", () => {
       const industry = newIndustry.value.trim();
       const needs = newNeeds.value.trim();
       const gives = newGives.value.trim();
-       if (!name) {
-      showToast("Enter a founder name");
-      return;
-    }
+      if (!name) {
+        showToast("Enter a founder name");
+        return;
+      }
 
 
-    try {
-      const res = await fetch(API_BASE + "/api/founders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          founder_name: name,
-          industry: industry,
-          gives_text: gives,
-          needs_text: needs,
-        })
-      });
+      try {
+        const res = await fetch(API_BASE + "/api/founders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            founder_name: name,
+            industry: industry,
+            gives_text: gives,
+            needs_text: needs,
+          })
+        });
 
 
-      if (!res.ok) throw new Error("Failed");
+        if (!res.ok) throw new Error("Failed");
+
+        // parse saved founder returned by backend
+        const saved = await res.json();
+
+        showToast("Founder added");
+        addForm.style.display = "none";
 
 
-      showToast("Founder added");
-      addForm.style.display = "none";
+        newName.value = "";
+        newIndustry.value = "";
+        newNeeds.value = "";
+        newGives.value = "";
+
+        // Try to pick the new founder by ID (backend should return founder_id or id)
+        const newId = saved?.founder_id ?? saved?.id ?? null;
+        loadFounders(newId);
+      } catch (err) {
+        showToast("Error adding founder");
+        console.error(err);
+      }
+    });
+  }
 
 
-      newName.value = "";
-      newIndustry.value = "";
-      newNeeds.value = "";
-      newGives.value = "";
+  // toggle handling for dropdown details in matches
+  document.addEventListener("click", e => {
+    if (e.target.classList.contains("toggle-details")) {
+      const card = e.target.closest(".match");
+      const shortEl = card.querySelector(".match-gives.short");
+      const fullEl  = card.querySelector(".match-gives.full");
 
 
-      loadFounders();
-    } catch (err) {
-      showToast("Error adding founder");
-      console.error(err);
+      const expanded = fullEl.style.display === "block";
+
+
+      if (expanded) {
+        fullEl.style.display = "none";
+        shortEl.style.display = "block";
+        e.target.textContent = "Show More";
+      } else {
+        fullEl.style.display = "block";
+        shortEl.style.display = "none";
+        e.target.textContent = "Show Less";
+      }
     }
   });
-}
+
+  // explanation handling for matches
+  if (matches) {
+    matches.addEventListener("click", async e => {
+      if (e.target.classList.contains("show-explanation")) {
+        const card = e.target.closest(".match");
+        const explanationDiv = card.querySelector(".explanation");
 
 
-// toggle handling for dropdown details in matches
-document.addEventListener("click", e => {
-  if (e.target.classList.contains("toggle-details")) {
-    const card = e.target.closest(".match");
-    const shortEl = card.querySelector(".match-gives.short");
-    const fullEl  = card.querySelector(".match-gives.full");
-
-
-    const expanded = fullEl.style.display === "block";
-
-
-    if (expanded) {
-      fullEl.style.display = "none";
-      shortEl.style.display = "block";
-      e.target.textContent = "Show More";
-    } else {
-      fullEl.style.display = "block";
-      shortEl.style.display = "none";
-      e.target.textContent = "Show Less";
-    }
+        if (explanationDiv.style.display === "block") {
+          explanationDiv.style.display = "none";
+          e.target.textContent = "Show Explanation";
+        } else {
+          e.target.textContent = "Loading…";
+          const data = await apiExplain(selectedGlobalIndex, parseInt(kInput.value || "5"));
+          const matchGlobalIndex = parseInt(card.dataset.index);
+          const found = (data?.explanations || []).find(x => Number(x.index) === matchGlobalIndex);
+          explanationDiv.textContent = found?.explanation || "No explanation available.";
+          explanationDiv.style.display = "block";
+          e.target.textContent = "Hide Explanation";
+        }
+      }
+    });
   }
-});
-// explanation handling for matches
-matches.addEventListener("click", async e => {
-  if (e.target.classList.contains("show-explanation")) {
-    const card = e.target.closest(".match");
-    const explanationDiv = card.querySelector(".explanation");
-
-
-    if (explanationDiv.style.display === "block") {
-      explanationDiv.style.display = "none";
-      e.targest.textContent = "Show Explanation";
-    } else {
-      e.target.textContent = "Loading…";
-     const data = await apiExplain(selectedGlobalIndex, parseInt(kInput.value || "5"));
-     const matchGlobalIndex = parseInt(card.dataset.index);
-     const found = (data?.explanations || []).find(x => Number(x.index) === matchGlobalIndex);
-      explanationDiv.textContent = found?.explanation || "No explanation available.";
-      explanationDiv.style.display = "block";
-      e.target.textContent = "Hide Explanation";
-    }
-  }
-});
-
-
-
 
 
 
@@ -450,7 +482,7 @@ matches.addEventListener("click", async e => {
   }
 
 
-  const debounced = debounce(loadFounders, 300);
+  const debounced = debounce(() => loadFounders(), 300);
   if (searchInput) searchInput.addEventListener("input", () => debounced());
 
 
@@ -517,9 +549,3 @@ matches.addEventListener("click", async e => {
   // ---------- init ----------
   loadFounders().catch(() => {});
 });
-
-
-
-
-
-

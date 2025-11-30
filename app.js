@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="body">
-            <div class="muted">Gives</div>
+            <div class="muted">Skills</div>
             <div class="mono match-gives short">${shortGives}</div>
             <button class="toggle-details btn small">Show More</button>
             <div class="mono match-gives full" style="display:none;">${fullGives}</div>

@@ -1,0 +1,14 @@
+[
+  {
+    "founder_name": "Nathanael Garcia",
+    "industry": "Software Engineer",
+    "needs_text": "UI/UX, Web Dev, Full Stack",
+    "gives_text": "Software Engineer, Machine Learning, Cybersecurity"
+  },
+  {
+    "founder_name": "Sayumi Amarasinghe",
+    "industry": "FullStack Developer",
+    "needs_text": "Data Science, Mobile App Dev, Machine Learning",
+    "gives_text": "Front-End Development, UI/UX, Web Development"
+  }
+]

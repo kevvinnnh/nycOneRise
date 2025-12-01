@@ -16,5 +16,11 @@
     "industry": "Software Engineer",
     "needs_text": "UI/UX, Web Dev, Full Stack",
     "gives_text": "Software Engineering, AI"
+  },
+  {
+    "founder_name": "Ashley Mapes",
+    "industry": "Software Engineer",
+    "needs_text": "Data Science, Mobile App Dev, Machine Learning",
+    "gives_text": "Software Engineer, AI, Data Science"
   }
 ]

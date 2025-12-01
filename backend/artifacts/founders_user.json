@@ -10,5 +10,11 @@
     "industry": "FullStack Developer",
     "needs_text": "Data Science, Mobile App Dev, Machine Learning",
     "gives_text": "Front-End Development, UI/UX, Web Development"
+  },
+  {
+    "founder_name": "Sayumi Amarasinghe",
+    "industry": "Software Engineer",
+    "needs_text": "UI/UX, Web Dev, Full Stack",
+    "gives_text": "Software Engineering, AI"
   }
 ]

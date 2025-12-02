@@ -186,9 +186,26 @@ class FounderInput(BaseModel):
 @app.post("/api/founders")
 def add_founder(data: FounderInput):
     users = load_user_founders()
-    users.append(data.dict())
+
+    # -------------------------------------------
+    # Generate stable unique founder/user ID
+    # -------------------------------------------
+    import uuid
+    new_id = "U-" + uuid.uuid4().hex[:10]
+
+    new_record = {
+        "founder_id": new_id,
+        "startup_id": None,
+        "founder_name": data.founder_name,
+        "industry": data.industry,
+        "needs_text": data.needs_text,
+        "gives_text": data.gives_text,
+    }
+
+    users.append(new_record)
     save_user_founders(users)
-    return {"success": True}
+
+    return {"success": True, "founder_id": new_id}
 
 
 # ===============================================================

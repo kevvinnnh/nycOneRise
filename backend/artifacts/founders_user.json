@@ -22,5 +22,19 @@
     "industry": "Software Engineer",
     "needs_text": "Data Science, Mobile App Dev, Machine Learning",
     "gives_text": "Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_name": "Sarah Huynh",
+    "industry": "Housing IT Tech",
+    "needs_text": "UI/UX, Web Dev, Full Stack",
+    "gives_text": "Software Engineering, AI, Data Science"
+  },
+  {
+    "founder_id": "U-1ad34ad16b",
+    "startup_id": null,
+    "founder_name": "Nathanael Garcia",
+    "industry": "Software Engineer",
+    "needs_text": "UI/UX, Web Dev, Full Stack",
+    "gives_text": "Software Engineer, AI, Data Science"
   }
 ]

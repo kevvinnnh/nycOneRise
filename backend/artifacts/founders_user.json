@@ -36,5 +36,37 @@
     "industry": "Software Engineer",
     "needs_text": "UI/UX, Web Dev, Full Stack",
     "gives_text": "Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_id": "U-44631b4744",
+    "startup_id": null,
+    "founder_name": "Kevin Hernandez",
+    "industry": "Software Engineer",
+    "needs_text": "Data Science, Mobile App Dev, Machine Learning",
+    "gives_text": "Software Engineering, AI, Data Science"
+  },
+  {
+    "founder_id": "U-78087e1bda",
+    "startup_id": null,
+    "founder_name": "Manav Desai",
+    "industry": "TD Bank",
+    "needs_text": "Finance, FrontEnd, Backend",
+    "gives_text": "Machine learning, AI, GenAI"
+  },
+  {
+    "founder_id": "U-9eca1be8fd",
+    "startup_id": null,
+    "founder_name": "Nathanael Garcia",
+    "industry": "Software Engineer",
+    "needs_text": "UI/UX, Web Dev, Full Stack",
+    "gives_text": "Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_id": "U-b52a04a9ad",
+    "startup_id": null,
+    "founder_name": "Eagle Tong",
+    "industry": "OneRise NYC",
+    "needs_text": "fundraising",
+    "gives_text": "mentorship"
   }
 ]

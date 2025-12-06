@@ -368,14 +368,14 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
     return TopKResponse(
         query_index=i,
         founder={
-            "founder_id": me["founder_id"],
-            "founder_name": me["founder_name"],
-            "industry": me["industry"],
-            "needs_text": me["__needs_text__"][:200],
-            "needs_text_full": me["__needs_text__"],
+            "founder_id": user.get("founder_id"),
+            "founder_name": user["founder_name"],
+            "industry": user.get("industry", ""),
+            "needs_text": user["needs_text"][:200],
         },
-        "explanations": explanations
-    }
+        matches=matches,
+    )
+
 
 
 

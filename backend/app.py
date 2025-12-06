@@ -4,6 +4,11 @@ from pydantic import BaseModel
 import numpy as np
 import pandas as pd
 import os, json
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 APP_DIR = os.path.dirname(__file__)
 ART_DIR = os.path.join(APP_DIR, "artifacts")
@@ -12,6 +17,12 @@ NEEDS_PATH = os.path.join(ART_DIR, "needs_emb.npy")
 GIVES_PATH = os.path.join(ART_DIR, "gives_emb.npy")
 META_PATH  = os.path.join(ART_DIR, "founders_meta.parquet")
 MANIFEST_PATH = os.path.join(ART_DIR, "manifest.json")
+
+# Initialize OpenAI client
+openai_client = None
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+if OPENAI_API_KEY:
+    openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = FastAPI(title="OneRise Founder Match API", version="0.1.0")
 
@@ -81,6 +92,54 @@ class TopKResponse(BaseModel):
     founder: dict
     matches: list
 
+class ExplanationRequest(BaseModel):
+    seeker_name: str
+    seeker_needs: str
+    match_name: str
+    match_gives: str
+
+class ExplanationResponse(BaseModel):
+    explanation: str
+
+@app.post("/api/explain", response_model=ExplanationResponse)
+async def explain_match(req: ExplanationRequest):
+    """Generate an AI explanation for why two founders are a good match."""
+    if not openai_client:
+        raise HTTPException(503, "OpenAI API key not configured")
+    
+    try:
+        prompt = f"""You are an expert at analyzing founder connections and partnerships. 
+Given the following information about two founders, explain why they would be a good match for collaboration or partnership.
+
+SEEKER: {req.seeker_name}
+NEEDS: {req.seeker_needs}
+
+POTENTIAL MATCH: {req.match_name}
+OFFERS: {req.match_gives}
+
+Provide a concise, insightful explanation (2-3 sentences) of why this is a good match. Focus on:
+- How the match's offerings align with the seeker's needs
+- Potential synergies or complementary skills
+- Value that could be created through this connection
+
+Be specific and actionable in your explanation."""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that explains why founders would be good matches for collaboration."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        
+        explanation = response.choices[0].message.content.strip()
+        return ExplanationResponse(explanation=explanation)
+    
+    except Exception as e:
+        raise HTTPException(500, f"Error generating explanation: {str(e)}")
+
 @app.get("/api/topk", response_model=TopKResponse)
 def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
     n = len(DF)
@@ -102,6 +161,7 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
             "founder_name": DF.iloc[j]["founder_name"],
             "industry": DF.iloc[j]["industry"],
             "gives_text": DF.iloc[j]["__gives_text__"][:160],
+            "gives_text_full": DF.iloc[j]["__gives_text__"],
         })
 
     me = DF.iloc[i]
@@ -112,6 +172,7 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
             "founder_name": me["founder_name"],
             "industry": me["industry"],
             "needs_text": me["__needs_text__"][:200],
+            "needs_text_full": me["__needs_text__"],
         },
         matches=rows
     )

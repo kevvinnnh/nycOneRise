@@ -211,3 +211,51 @@ body{
   color: var(--muted);
   opacity: 0.6;
 }
+
+/* Explanation Section */
+.explanation-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.btn-explain {
+  appearance: none;
+  border: 1px solid var(--accent);
+  background: linear-gradient(135deg, rgba(122,162,255,.1), rgba(79,236,181,.08));
+  color: var(--accent);
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: .2s transform ease, .2s background ease, .2s border-color ease;
+}
+
+.btn-explain:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(122,162,255,.2), rgba(79,236,181,.15));
+}
+
+.btn-explain:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.explanation-text {
+  margin-top: 10px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(122,162,255,.08), rgba(79,236,181,.05));
+  border: 1px solid rgba(122,162,255,.2);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #d8e0f3;
+}
+
+.explanation-text.error {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.3);
+  color: var(--danger);
+}

@@ -324,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="mono match-gives short">${shortGives}</div>
             <button class="toggle-details btn small">Show More</button>
             <div class="mono match-gives full" style="display:none;">${fullGives}</div>
-            <button class="btn small show-explanation">Show Explanation</button>
+            
             <div class="explanation" style="margin-top:5px; font-size:0.85em; display:none;"></div>
           </div>
           <div class="explanation-section" data-match-idx="${idx}">

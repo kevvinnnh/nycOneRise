@@ -8,10 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
   const API_BASE = localStorage.getItem("apiBase") || autoBase;
 
-
   // ---------- el helpers ----------
   const $ = sel => document.querySelector(sel);
-
 
   // ---------- elements ----------
   const founderSelect = $("#founderSelect"); // may not exist anymore
@@ -20,8 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadBtn = $("#loadBtn");
   const matchBtn = $("#matchBtn");
 
-
-  //add founder button
+  // add founder button + form
   const addFounderBtn = $("#addFounderBtn");
   const addForm = $("#addFounderForm");
   const newName = $("#founderNameInput");
@@ -30,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const newGives = $("#founderGivesInput");
   const btnCancelAdd = $("#cancelAddFounderBtn");
   const btnSaveAdd = $("#submitAddFounderBtn");
-
 
   const kInput = $("#kInput");
   const kVal = $("#kVal");
@@ -51,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCancelSettings = $("#btnCancelSettings");
   const matchSubtitle = $("#matchSubtitle");
 
-
   // ---------- environment ----------
   if (envChip) {
     envChip.textContent =
@@ -61,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (apiBaseInput) apiBaseInput.value = API_BASE;
 
-
   // ---------- utils ----------
   const debounce = (fn, ms = 300) => {
     let t;
@@ -70,12 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
       t = setTimeout(() => fn(...args), ms);
     };
   };
+
   const showToast = msg => {
     if (!toast) return;
     toast.textContent = msg;
     toast.style.display = "block";
     setTimeout(() => (toast.style.display = "none"), 2400);
   };
+
   const setSkeleton = (el, on = true) => {
     if (!el) return;
     if (on) {
@@ -85,18 +81,18 @@ document.addEventListener("DOMContentLoaded", () => {
       el.classList.remove("skeleton");
     }
   };
+
   const initials = (str = "") => {
     const parts = String(str).trim().split(/\s+/).slice(0, 2);
     return parts.map(p => p[0]?.toUpperCase() || "").join("") || "?";
   };
-  const scorePct = s => Math.max(0, Math.min(100, Math.round((s || 0) * 100)));
 
+  const scorePct = s => Math.max(0, Math.min(100, Math.round((s || 0) * 100)));
 
   // ---------- data ----------
   let cacheList = [];
-  let selectedGlobalIndex = null; // global DF index (from backend) when present
-  let selectedLocalIndex = null;  // index into cacheList (local array index)
-
+  let selectedGlobalIndex = null; // global DF index (from backend)
+  let selectedLocalIndex = null;  // index into cacheList
 
   // ---------- API ----------
   async function apiFounders(q = "") {
@@ -106,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!res.ok) throw new Error(`Founders fetch failed: ${res.status}`);
     return res.json();
   }
-
 
   async function apiTopK(globalIndex, k) {
     const url = new URL(API_BASE + "/api/topk");
@@ -147,17 +142,15 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedLocalIndex = null;
   }
 
-
   function setSelectedIndex(idx) {
     if (idx == null || idx < 0 || !cacheList[idx]) {
       resetDetails();
       return;
     }
     const f = cacheList[idx];
-    // prefer explicit global DF index returned by backend; fallback to local idx
+    // Prefer explicit global DF index returned by backend; fallback to local idx
     selectedGlobalIndex = (typeof f.index !== "undefined") ? f.index : idx;
     selectedLocalIndex = idx;
-
 
     nameEl.textContent = f.founder_name || "Unnamed founder";
     avatar.textContent = initials(f.founder_name);
@@ -166,8 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : "";
     meta.textContent = `ID ${f.founder_id ?? "—"}`;
 
-
-    // render needs safely
+    // needs_text from /api/founders may or may not exist; fallback to placeholder
     setSkeleton(needs, true);
     setTimeout(() => {
       setSkeleton(needs, false);
@@ -175,14 +167,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 80);
   }
 
-
   // ---------- render founders ----------
   function renderFounders(list) {
     const listEl = document.getElementById("founderList");
     if (!listEl) return;
     listEl.innerHTML = "";
     cacheList = list;
-
 
     list.forEach((f, idx) => {
       const div = document.createElement("div");
@@ -199,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="founder-id">#${f.founder_id ?? "—"}</div>
       `;
 
-
       div.addEventListener("click", () => {
         document
           .querySelectorAll(".founder-item")
@@ -208,23 +197,19 @@ document.addEventListener("DOMContentLoaded", () => {
         setSelectedIndex(idx);
       });
 
-
       div.addEventListener("dblclick", async () => {
         document
           .querySelectorAll(".founder-item")
           .forEach(i => i.classList.remove("active"));
         div.classList.add("active");
         setSelectedIndex(idx);
-        // Wait briefly to ensure needs_text has rendered before fetching matches
         await new Promise(r => setTimeout(r, 150));
         runTopK();
       });
 
-
       listEl.appendChild(div);
     });
   }
-
 
   // ---------- load founders ----------
   // now accepts optional selectFounderId (e.g. the id returned after POST)
@@ -237,11 +222,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // If a specific founder ID was supplied (e.g. just-created), try to select them
       if (selectFounderId) {
-        // allow number/string tolerance
-        const idx = data.findIndex(f => String(f.founder_id) === String(selectFounderId));
+        const idx = data.findIndex(
+          f => String(f.founder_id) === String(selectFounderId)
+        );
         if (idx >= 0) {
           setSelectedIndex(idx);
-          document.querySelectorAll(".founder-item")[idx]?.classList.add("active");
+          document
+            .querySelectorAll(".founder-item")[idx]
+            ?.classList.add("active");
           return;
         }
       }
@@ -249,7 +237,9 @@ document.addEventListener("DOMContentLoaded", () => {
       // Otherwise default to first item
       if (data.length) {
         setSelectedIndex(0);
-        document.querySelectorAll(".founder-item")[0]?.classList.add("active");
+        document
+          .querySelectorAll(".founder-item")[0]
+          ?.classList.add("active");
       } else resetDetails();
     } catch (e) {
       console.error(e);
@@ -257,7 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
       resetDetails();
     }
   }
-
 
   // ---------- run matches ----------
   async function runTopK() {
@@ -268,7 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const k = parseInt((kInput?.value || "5"), 10);
     localStorage.setItem("topK", String(k));
 
-
     matches.innerHTML = "";
     for (let i = 0; i < Math.min(k, 10); i++) {
       const sk = document.createElement("div");
@@ -278,15 +266,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     matchSubtitle.textContent = "Fetching…";
 
-
     try {
       const data = await apiTopK(selectedGlobalIndex, k);
       const f = data.founder || {};
-      // Always re-render needs after match fetch
+
+      // Re-render needs from topK response (has needs_text_full)
       if (f.needs_text) needs.textContent = f.needs_text;
       else if (selectedLocalIndex != null && cacheList[selectedLocalIndex])
         needs.textContent = cacheList[selectedLocalIndex].needs_text || "—";
-
 
       if (!Array.isArray(data.matches) || data.matches.length === 0) {
         matches.innerHTML = `<div class="empty">No matches returned.</div>`;
@@ -294,18 +281,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-
       matches.innerHTML = "";
       const seekerName = f.founder_name || "Unknown";
       const seekerNeeds = f.needs_text_full || f.needs_text || "";
-      
+
       data.matches.forEach((m, idx) => {
         const sc = scorePct(m.score);
         const el = document.createElement("div");
         const gives = m.gives_text || "—";
 
         // split by comma or newline
-        const givesList = gives.split(/[,|\n]+/).map(x => x.trim()).filter(Boolean);
+        const givesList = gives
+          .split(/[,|\n]+/)
+          .map(x => x.trim())
+          .filter(Boolean);
 
         // first 3
         const shortGives = givesList.slice(0, 3).join(", ");
@@ -343,34 +332,33 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="explanation-text" style="display:none;"></div>
           </div>
         `;
-        
+
         // Store data for explanation generation
         el.dataset.matchGives = m.gives_text_full || m.gives_text || "";
         el.dataset.matchName = m.founder_name || "";
         el.dataset.seekerName = seekerName;
         el.dataset.seekerNeeds = seekerNeeds;
-        
+
         matches.appendChild(el);
       });
-      
-      // Add click handlers for explanation buttons
+
+      // Add click handlers for per-match explanation buttons
       matches.querySelectorAll(".btn-explain").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
+        btn.addEventListener("click", async () => {
           const matchEl = btn.closest(".match");
           const explSection = btn.closest(".explanation-section");
           const explText = explSection.querySelector(".explanation-text");
-          
-          // If already showing, toggle off
+
+          // toggle off if already visible
           if (explText.style.display === "block") {
             explText.style.display = "none";
             btn.textContent = "✨ Explain Match";
             return;
           }
-          
-          // Show loading state
+
           btn.textContent = "⏳ Generating...";
           btn.disabled = true;
-          
+
           try {
             const result = await apiExplain(
               matchEl.dataset.seekerName,
@@ -378,14 +366,15 @@ document.addEventListener("DOMContentLoaded", () => {
               matchEl.dataset.matchName,
               matchEl.dataset.matchGives
             );
-            
+
             explText.textContent = result.explanation;
             explText.style.display = "block";
             btn.textContent = "✨ Hide Explanation";
             btn.disabled = false;
           } catch (err) {
             console.error("Explain error:", err);
-            explText.textContent = "Failed to generate explanation. Make sure OPENAI_API_KEY is set.";
+            explText.textContent =
+              "Failed to generate explanation. Make sure OPENAI_API_KEY is set.";
             explText.style.display = "block";
             explText.classList.add("error");
             btn.textContent = "✨ Retry";
@@ -393,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
-      
+
       matchSubtitle.textContent = `${data.matches.length} results`;
       showToast("Matches updated");
     } catch (e) {
@@ -404,20 +393,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
   // ---------- events ----------
   if (loadBtn) loadBtn.addEventListener("click", () => loadFounders());
   if (btnRefresh) btnRefresh.addEventListener("click", () => loadFounders());
   if (matchBtn) matchBtn.addEventListener("click", runTopK);
 
-
-  //events for add founder button
+  // events for add founder button
   if (addFounderBtn) {
     addFounderBtn.addEventListener("click", () => {
       addForm.style.display = addForm.style.display === "block" ? "none" : "block";
     });
   }
-  //cancel the add founder form
+
+  // cancel the add founder form
   if (btnCancelAdd) {
     btnCancelAdd.addEventListener("click", () => {
       addForm.style.display = "none";
@@ -427,18 +415,19 @@ document.addEventListener("DOMContentLoaded", () => {
       newGives.value = "";
     });
   }
-  //submit the add founder form
+
+  // submit the add founder form
   if (btnSaveAdd) {
     btnSaveAdd.addEventListener("click", async () => {
       const name = newName.value.trim();
       const industry = newIndustry.value.trim();
-      const needs = newNeeds.value.trim();
-      const gives = newGives.value.trim();
+      const needsText = newNeeds.value.trim();
+      const givesText = newGives.value.trim();
+
       if (!name) {
         showToast("Enter a founder name");
         return;
       }
-
 
       try {
         const res = await fetch(API_BASE + "/api/founders", {
@@ -447,36 +436,34 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({
             founder_name: name,
             industry: industry,
-            gives_text: gives,
-            needs_text: needs,
+            gives_text: givesText,
+            needs_text: needsText,
           })
         });
 
-
         if (!res.ok) throw new Error("Failed");
 
-        // parse saved founder returned by backend
         const saved = await res.json();
 
         showToast("Founder added");
         addForm.style.display = "none";
-
 
         newName.value = "";
         newIndustry.value = "";
         newNeeds.value = "";
         newGives.value = "";
 
-        // Try to pick the new founder by ID (backend should return founder_id or id)
+        // Try to pick the new founder by ID returned from backend
         const newId = saved?.founder_id ?? saved?.id ?? null;
-        loadFounders(newId);
+        await loadFounders(newId);  // ensure list refreshed & new founder selected
+        // Optional: immediately run matches for the new founder
+        runTopK();
       } catch (err) {
         showToast("Error adding founder");
         console.error(err);
       }
     });
   }
-
 
   // toggle handling for dropdown details in matches
   document.addEventListener("click", e => {
@@ -485,9 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const shortEl = card.querySelector(".match-gives.short");
       const fullEl  = card.querySelector(".match-gives.full");
 
-
       const expanded = fullEl.style.display === "block";
-
 
       if (expanded) {
         fullEl.style.display = "none";
@@ -501,31 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // explanation handling for matches
-  if (matches) {
-    matches.addEventListener("click", async e => {
-      if (e.target.classList.contains("show-explanation")) {
-        const card = e.target.closest(".match");
-        const explanationDiv = card.querySelector(".explanation");
-
-
-        if (explanationDiv.style.display === "block") {
-          explanationDiv.style.display = "none";
-          e.target.textContent = "Show Explanation";
-        } else {
-          e.target.textContent = "Loading…";
-          const data = await apiExplain(selectedGlobalIndex, parseInt(kInput.value || "5"));
-          const matchGlobalIndex = parseInt(card.dataset.index);
-          const found = (data?.explanations || []).find(x => Number(x.index) === matchGlobalIndex);
-          explanationDiv.textContent = found?.explanation || "No explanation available.";
-          explanationDiv.style.display = "block";
-          e.target.textContent = "Hide Explanation";
-        }
-      }
-    });
-  }
-
-
+  // (Old global .show-explanation handler removed; explanation now handled per-match in runTopK)
 
   if (kInput && kVal) {
     kInput.value = localStorage.getItem("topK") || "5";
@@ -533,10 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
     kInput.addEventListener("input", () => (kVal.textContent = kInput.value));
   }
 
-
   const debounced = debounce(() => loadFounders(), 300);
   if (searchInput) searchInput.addEventListener("input", () => debounced());
-
 
   document.addEventListener("keydown", e => {
     const key = e.key?.toLowerCase?.();
@@ -549,7 +508,6 @@ document.addEventListener("DOMContentLoaded", () => {
       runTopK();
     }
   });
-
 
   if (btnCopy) {
     btnCopy.addEventListener("click", () => {
@@ -573,7 +531,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
   // settings modal
   if (btnSettings)
     btnSettings.addEventListener("click", () => (settingsModal.style.display = "grid"));
@@ -596,7 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
     settingsModal.addEventListener("click", e => {
       if (e.target === settingsModal) settingsModal.style.display = "none";
     });
-
 
   // ---------- init ----------
   loadFounders().catch(() => {});

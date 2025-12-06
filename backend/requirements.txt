@@ -5,3 +5,5 @@ numpy
 sentence-transformers
 scikit-learn
 fastparquet==2024.5.0
+openai
+python-dotenv

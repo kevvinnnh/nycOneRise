@@ -117,24 +117,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return res.json();
   }
 
-
-  //api explanation generator
-  async function apiExplain(globalIndex, k) {
-    try {
-      const url = new URL(API_BASE + "/api/explain");
-      url.searchParams.set("founder_index", globalIndex);
-      url.searchParams.set("k", k);
-
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Explaination fetch failed");
-      return res.json();
-    } catch (err) {
-      console.error(err);
-      showToast("Failed to fetch explanation");
-    }
+  async function apiExplain(seekerName, seekerNeeds, matchName, matchGives) {
+    const res = await fetch(API_BASE + "/api/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        seeker_name: seekerName,
+        seeker_needs: seekerNeeds,
+        match_name: matchName,
+        match_gives: matchGives
+      })
+    });
+    if (!res.ok) throw new Error(`Explain API failed: ${res.status}`);
+    return res.json();
   }
-
 
   // ---------- details helpers ----------
   function resetDetails() {
@@ -300,6 +296,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       matches.innerHTML = "";
+      const seekerName = f.founder_name || "Unknown";
+      const seekerNeeds = f.needs_text_full || f.needs_text || "";
+      
       data.matches.forEach((m, idx) => {
         const sc = scorePct(m.score);
         const el = document.createElement("div");
@@ -339,9 +338,62 @@ document.addEventListener("DOMContentLoaded", () => {
             <button class="btn small show-explanation">Show Explanation</button>
             <div class="explanation" style="margin-top:5px; font-size:0.85em; display:none;"></div>
           </div>
+          <div class="explanation-section" data-match-idx="${idx}">
+            <button class="btn btn-explain" data-match-idx="${idx}">✨ Explain Match</button>
+            <div class="explanation-text" style="display:none;"></div>
+          </div>
         `;
+        
+        // Store data for explanation generation
+        el.dataset.matchGives = m.gives_text_full || m.gives_text || "";
+        el.dataset.matchName = m.founder_name || "";
+        el.dataset.seekerName = seekerName;
+        el.dataset.seekerNeeds = seekerNeeds;
+        
         matches.appendChild(el);
       });
+      
+      // Add click handlers for explanation buttons
+      matches.querySelectorAll(".btn-explain").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const matchEl = btn.closest(".match");
+          const explSection = btn.closest(".explanation-section");
+          const explText = explSection.querySelector(".explanation-text");
+          
+          // If already showing, toggle off
+          if (explText.style.display === "block") {
+            explText.style.display = "none";
+            btn.textContent = "✨ Explain Match";
+            return;
+          }
+          
+          // Show loading state
+          btn.textContent = "⏳ Generating...";
+          btn.disabled = true;
+          
+          try {
+            const result = await apiExplain(
+              matchEl.dataset.seekerName,
+              matchEl.dataset.seekerNeeds,
+              matchEl.dataset.matchName,
+              matchEl.dataset.matchGives
+            );
+            
+            explText.textContent = result.explanation;
+            explText.style.display = "block";
+            btn.textContent = "✨ Hide Explanation";
+            btn.disabled = false;
+          } catch (err) {
+            console.error("Explain error:", err);
+            explText.textContent = "Failed to generate explanation. Make sure OPENAI_API_KEY is set.";
+            explText.style.display = "block";
+            explText.classList.add("error");
+            btn.textContent = "✨ Retry";
+            btn.disabled = false;
+          }
+        });
+      });
+      
       matchSubtitle.textContent = `${data.matches.length} results`;
       showToast("Matches updated");
     } catch (e) {

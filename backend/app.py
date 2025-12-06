@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
-import os, json, hashlib
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+import os, json
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ===============================================================
 # PATHS
@@ -23,6 +25,12 @@ USER_DB_PATH = os.path.join(ART_DIR, "founders_user.json")
 # ===============================================================
 # FASTAPI APP
 # ===============================================================
+# Initialize OpenAI client
+openai_client = None
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+if OPENAI_API_KEY:
+    openai_client = OpenAI(api_key=OPENAI_API_KEY)
+
 app = FastAPI(title="OneRise Founder Match API", version="0.2.0")
 
 app.add_middleware(
@@ -216,6 +224,54 @@ class TopKResponse(BaseModel):
     founder: dict
     matches: list
 
+class ExplanationRequest(BaseModel):
+    seeker_name: str
+    seeker_needs: str
+    match_name: str
+    match_gives: str
+
+class ExplanationResponse(BaseModel):
+    explanation: str
+
+@app.post("/api/explain", response_model=ExplanationResponse)
+async def explain_match(req: ExplanationRequest):
+    """Generate an AI explanation for why two founders are a good match."""
+    if not openai_client:
+        raise HTTPException(503, "OpenAI API key not configured")
+    
+    try:
+        prompt = f"""You are an expert at analyzing founder connections and partnerships. 
+Given the following information about two founders, explain why they would be a good match for collaboration or partnership.
+
+SEEKER: {req.seeker_name}
+NEEDS: {req.seeker_needs}
+
+POTENTIAL MATCH: {req.match_name}
+OFFERS: {req.match_gives}
+
+Provide a concise, insightful explanation (2-3 sentences) of why this is a good match. Focus on:
+- How the match's offerings align with the seeker's needs
+- Potential synergies or complementary skills
+- Value that could be created through this connection
+
+Be specific and actionable in your explanation."""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that explains why founders would be good matches for collaboration."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        
+        explanation = response.choices[0].message.content.strip()
+        return ExplanationResponse(explanation=explanation)
+    
+    except Exception as e:
+        raise HTTPException(500, f"Error generating explanation: {str(e)}")
+
 @app.get("/api/topk", response_model=TopKResponse)
 def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
 
@@ -306,51 +362,17 @@ def topk(i: int = Query(..., ge=0), k: int = Query(5, ge=1, le=50)):
             "founder_name": DF.iloc[j]["founder_name"],
             "industry": DF.iloc[j]["industry"],
             "gives_text": DF.iloc[j]["__gives_text__"][:160],
+            "gives_text_full": DF.iloc[j]["__gives_text__"],
         })
 
     return TopKResponse(
         query_index=i,
         founder={
-            "founder_name": user["founder_name"],
-            "industry": user.get("industry", ""),
-            "needs_text": user["needs_text"][:200],
-        },
-        matches=matches,
-    )
-
-
-
-# ============================================================
-#  /api/explain
-# ============================================================
-@app.get("/api/explain")
-def explain(founder_index: int = Query(..., ge=0), k:int=Query(5, ge=1, le=50)):
-
-    if founder_index >= len(DF):
-        raise HTTPException(400, f"index must be < {len(DF)}")
-
-    sims = E_NEEDS[founder_index] @ E_GIVES.T
-    sims[founder_index] = -1e9
-    top_idx = np.argpartition(-sims, k)[:k]
-    top_idx = top_idx[np.argsort(-sims[top_idx])]
-
-    explanations = []
-    needs_text = preprocess_text(str(DF.iloc[founder_index]["__needs_text__"]))
-
-    for j in top_idx:
-        gives_text = preprocess_text(str(DF.iloc[j]["__gives_text__"]))
-        explanations.append({
-            "founder_name": DF.iloc[j]["founder_name"],
-            "industry": DF.iloc[j]["industry"],
-            "similarity_score": float(sims[j]),
-            "explanation": f"Match based on overlap between founder needs: '{needs_text}' and gives: '{gives_text}'"
-        })
-
-    return {
-        "query_index": founder_index,
-        "founder": {
-            "founder_name": DF.iloc[founder_index]["founder_name"],
-            "industry": DF.iloc[founder_index]["industry"],
+            "founder_id": me["founder_id"],
+            "founder_name": me["founder_name"],
+            "industry": me["industry"],
+            "needs_text": me["__needs_text__"][:200],
+            "needs_text_full": me["__needs_text__"],
         },
         "explanations": explanations
     }

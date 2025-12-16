@@ -32,7 +32,7 @@ app = FastAPI(title="OneRise Founder Match API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://kevvinnnh.github.io",   # your deployed frontend
+        "https://kevvinnnh.github.io",   # deployed frontend
         "http://127.0.0.1:5500",         # local frontend
         "http://localhost:5500",
         "http://[::]:5500",              # for IPv6 (Safari / macOS)

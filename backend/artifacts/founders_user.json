@@ -86,5 +86,69 @@
     "industry":"Software Engineer",
     "__needs_text__":"UI\/UX, Web Dev, Full Stack",
     "__gives_text__":"Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_id":461,
+    "startup_id":461.0,
+    "founder_name":"Eagle Tong",
+    "industry":"OneRise NYC",
+    "__needs_text__":"fundraising, e-commerce, frontend",
+    "__gives_text__":"mentorship, guidance, machine learning"
+  },
+  {
+    "founder_id":462,
+    "startup_id":462.0,
+    "founder_name":"Courtney Neal",
+    "industry":"Petco",
+    "__needs_text__":"UI\/UX, Web Dev, Full Stack",
+    "__gives_text__":"Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_id":463,
+    "startup_id":463.0,
+    "founder_name":"Eagle Tong",
+    "industry":"OneRise NYC",
+    "__needs_text__":"fundraising, frontend, e-commerce",
+    "__gives_text__":"mentorship, machine learning, finance"
+  },
+  {
+    "founder_id":464,
+    "startup_id":464.0,
+    "founder_name":"Cass Levy",
+    "industry":"Software Engineer",
+    "__needs_text__":"UI\/UX, Web Dev, Full Stack",
+    "__gives_text__":"Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_id":465,
+    "startup_id":465.0,
+    "founder_name":"grace rozario",
+    "industry":"Software Engineer",
+    "__needs_text__":"UI\/UX, Web Dev, Full Stack",
+    "__gives_text__":"Software Engineer, AI, Data Science"
+  },
+  {
+    "founder_id":466,
+    "startup_id":466.0,
+    "founder_name":"Grace Rozario",
+    "industry":"OneRise NYC",
+    "__needs_text__":"UI\/UX, Web Dev, Full Stack",
+    "__gives_text__":"backend, machine learning, mobile development"
+  },
+  {
+    "founder_id":467,
+    "startup_id":467.0,
+    "founder_name":"Sophia Cruz",
+    "industry":"OneRise NYC",
+    "__needs_text__":"frontend, e-commerce, fundraising",
+    "__gives_text__":"backend, mobile, growth"
+  },
+  {
+    "founder_id":468,
+    "startup_id":468.0,
+    "founder_name":"Jason Walker",
+    "industry":"OneRise NYC",
+    "__needs_text__":"frontend, e-commerce, fundraising",
+    "__gives_text__":"backend, finance, growth"
   }
 ]
